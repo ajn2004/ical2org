@@ -195,6 +195,7 @@ in_daylight && /TZOFFSETFROM:[^:]/{
     insummary = 0
     inattendee = 0
     inlocation = 0
+    located = 0
     in_alarm = 0
     got_end_date = 0
     attending = attending_types["UNSET"];
@@ -356,7 +357,12 @@ in_daylight && /TZOFFSETFROM:[^:]/{
 
 # The description will the contents of the entry in org-mode.
 # this line may be continued.
-
+/^X-GOOGLE-CONFERENCE/ {
+    match( $0, /https[^[:space:]]+/, a)
+    {
+         location = a[0]
+    }
+}
 /^DESCRIPTION/ {
     if (!in_alarm) {
         # Setting $1 to "" clears colons from items like "1:1 with Marc", so we
@@ -387,26 +393,27 @@ in_daylight && /TZOFFSETFROM:[^:]/{
 
 /^UID/ {
     if (!in_alarm) {
-        id = id gensub("\r", "", "g", $2);
+        id = id gensub("\r", "", "g", $0);
 	
     }
 }
 
 /^LOCATION/ {
-    located = 0
-    match($0, /https:[^[:space:]]+/, a)
-    {
-	location = a[0]
-	located = 1
-    }
 
-    if (!located) { # Then we don't have a URL
+    print "located " located
+    if (located == 0) { # Then we don't have a URL
 	location = unescape(gensub("\r", "", "g", $2), 0);
 	inlocation = 1;
     }
     # print "Location: " location
 }
 
+/^LOCATION:https[^[:space:]]+/ {
+    match($0, /https:[^[:space:]]+/, a)
+    {
+	location = a[0]
+    }
+}
 /^STATUS/ {
     status = gensub("\r", "", "g", $2);
     # print "Status: " status

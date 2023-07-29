@@ -393,8 +393,17 @@ in_daylight && /TZOFFSETFROM:[^:]/{
 }
 
 /^LOCATION/ {
-    location = unescape(gensub("\r", "", "g", $2), 0);
-    inlocation = 1;
+    located = 0
+    match($0, /https:[^[:space:]]+/, a)
+    {
+	location = a[0]
+	located = 1
+    }
+
+    if (!located) { # Then we don't have a URL
+	location = unescape(gensub("\r", "", "g", $2), 0);
+	inlocation = 1;
+    }
     # print "Location: " location
 }
 
